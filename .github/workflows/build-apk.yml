@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install Capacitor & Dependencies
+      - name: Install Dependencies & Capacitor
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
