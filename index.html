@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field Rx - AI & Voice Assistant</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
+        textarea { width: 100%; height: 100px; padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        .btn-container { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        button { padding: 12px 20px; font-size: 16px; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .ai-btn { background: #007bff; }
+        .mic-btn { background: #28a745; }
+        #responseBox { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd; min-height: 50px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+    <h2>Field Rx AI Assistant</h2>
+    <textarea id="userInput" placeholder="यहाँ टाइप करें या नीचे माइक दबाकर बोलें..."></textarea>
+    
+    <div class="btn-container">
+        <button class="mic-btn" onclick="startVoiceInput()">🎤 बोलकर लिखें</button>
+        <button class="ai-btn" onclick="callGeminiAPI()">AI से पूछें</button>
+    </div>
+
+    <h3>रिजल्ट:</h3>
+    <div id="responseBox">यहाँ जवाब दिखेगा...</div>
+
+    <script>
+        // वॉइस इनपुट (Speech-to-Text) फंक्शन
+        function startVoiceInput() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                alert("क्षमा करें, आपका ब्राउज़र वॉइस रिकग्निशन सपोर्ट नहीं करता है।");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'hi-IN'; // हिंदी भाषा के लिए (आप चाहें तो en-IN भी कर सकते हैं)
+            recognition.interimResults = false;
+
+            const userInputBox = document.getElementById('userInput');
+            userInputBox.placeholder = "सुन रहे हैं, बोलिए...";
+
+            recognition.onresult = (event) => {
+                const spokenText = event.results[0][0].transcript;
+                userInputBox.value = spokenText;
+                userInputBox.placeholder = "यहाँ टाइप करें या नीचे माइक दबाकर बोलें...";
+            };
+
+            recognition.onerror = (event) => {
+                alert("वॉइस एरर आ गया: " + event.error);
+                userInputBox.placeholder = "यहाँ टाइप करें या नीचे माइक दबाकर बोलें...";
+            };
+
+            recognition.start();
+        }
+
+        // जेमिनी API कॉल फंक्शन
+        async function callGeminiAPI() {
+            const apiKey = "AQ.Ab8RN6L4uMVOOzrtiC1NkC0lLj04I9Nv9HGAkiYWmIz_-Ky4bA";
+            const promptText = document.getElementById('userInput').value;
+            const responseBox = document.getElementById('responseBox');
+
+            if (!promptText.trim()) {
+                alert("कृपया कुछ लिखें या बोलें!");
+                return;
+            }
+
+            responseBox.innerText = "लोड हो रहा है...";
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: promptText }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0].content) {
+                    const aiReply = data.candidates[0].content.parts[0].text;
+                    responseBox.innerText = aiReply;
+                } else {
+                    responseBox.innerText = "एरर: कुछ गलत हो गया, रिस्पांस नहीं मिला।";
+                    console.error(data);
+                }
+
+            } catch (error) {
+                responseBox.innerText = "कनेक्शन एरर: " + error.message;
+                console.error(error);
+            }
+        }
+    </script>
+
+</body>
+</html>
