@@ -22,12 +22,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Project & Capacitor
+      - name: Setup Project & Capacitor
         run: |
-          npm install
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init FieldRx com.fieldrx.app --web-dir . --yes
-          npx cap add android
+          if [ ! -f package.json ]; then
+            npm init -y
+          fi
+          npm install @capacitor/core @capacitor/cli @capacitor/android --save
+          npx cap init FieldRx com.fieldrx.app --web-dir . --yes || true
+          npx cap add android || true
 
       - name: Build Android APK
         run: |
